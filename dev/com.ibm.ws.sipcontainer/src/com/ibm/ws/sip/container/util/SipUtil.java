@@ -338,6 +338,10 @@ public class SipUtil {
 				method.equals(RequestImpl.INFO)) {
 				rc = true;
 			}
+			
+			else if (method.equals(RequestImpl.NOTIFY)) {
+				rc = true;
+			}
 			else if (method.equals(Request.BYE)){
 				if(transactionUser.isProxying()){
 					rc = true;
