@@ -1102,7 +1102,7 @@ public class SipUtil {
 				int cause = 0;
 				String text = "";
 				// Split "Reason:" header by ';', as each parameter is separated by ';'
-				String [] reasonParam = reason.split(";");
+				String [] reasonParam = reason.split(";",3);
 				
 				// parse the protocol parameter
 				String protocol = reasonParam[0].trim();
