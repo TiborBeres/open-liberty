@@ -139,7 +139,7 @@ public class AsynchronousWorkTask extends RoutedTask implements AsynchronousWork
     /**
 	 * @see com.ibm.ws.sip.container.util.Queueable#getQueueIndex()
 	 */
-	public int getQueueIndex() {
+	public long getQueueIndex() {
 		if (_index < 0){
 			throw new RuntimeException("Dispatching error, transaction-user not found!");
 		}		
@@ -239,7 +239,7 @@ public class AsynchronousWorkTask extends RoutedTask implements AsynchronousWork
 		_appAsynchWorkListener = listener;
 
 		//get the current queue id of the running thread,
-		Integer currentQueueId = ThreadLocalStorage.getQueueId();
+		Long currentQueueId = ThreadLocalStorage.getQueueId();
 		
 		SipApplicationSession sipAppSession = SipApplicationSessionImpl.getAppSession(_appSessionID);
 		
@@ -281,7 +281,7 @@ public class AsynchronousWorkTask extends RoutedTask implements AsynchronousWork
 				}
 				
 				//calculate the queue id of the async work
-				int asyncQueueId = this.getQueueIndex() % NativeMessageDispatchingHandler.s_dispatchers;
+				Long asyncQueueId = this.getQueueIndex() % NativeMessageDispatchingHandler.s_dispatchers;
 				
 				if (asyncQueueId == currentQueueId.intValue()){
 					//the async work should run on the same queue as the current thread, run it now

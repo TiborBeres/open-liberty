@@ -69,19 +69,19 @@ public class NativeMessageDispatchingHandler implements MessageDispatchingHandle
 	/**
 	 * Defines the number of maximum messages per thread;
 	 */
-	static int s_maxMsgPerThread;
+	static long s_maxMsgPerThread;
 
 	/**
 	 * When passed the threshold defined by s_onlyCriricalMessagesGetsIn -  only 
 	 * critical messages gets in
 	 */
-	static int s_onlyCriricalMessagesGetsIn;
+	static long s_onlyCriricalMessagesGetsIn;
 
 	/**
 	 * When passed the low s_denieLowPeiorityMsgs - low priority 
 	 * messages are denied.
 	 */
-	static int s_rejectLowPriorityMsgs;
+	static long s_rejectLowPriorityMsgs;
 
 	/**
 	 * Ctor
@@ -130,12 +130,12 @@ public class NativeMessageDispatchingHandler implements MessageDispatchingHandle
 
 	/**
 	 * Change the number of known Sip Application queues
-	 * @param dispatchers
+	 * @param s_dispatchers2
 	 * @author mordechai
 	 */
-	protected void changeDispatcherCount(int dispatchers){
+	protected void changeDispatcherCount(int s_dispatchers2){
 		if (c_logger.isTraceEntryExitEnabled()) {
-			c_logger.traceEntry(this, "changeDispatcherCount" ,dispatchers);
+			c_logger.traceEntry(this, "changeDispatcherCount" ,s_dispatchers2);
 		}
 		s_maxMsgPerThread = s_maxDispatchMessages / s_dispatchers;
 		s_onlyCriricalMessagesGetsIn = s_maxDispatchMessages;
@@ -172,7 +172,7 @@ public class NativeMessageDispatchingHandler implements MessageDispatchingHandle
 			c_logger.traceEntry(this, "dispatch message = " + msg +" blockTime="+blockTimeout);
 		}
 
-		int index = msg.getQueueIndex();
+		long index = msg.getQueueIndex();
 		if(index < 0){
 			//this should never happen.
 			if (c_logger.isTraceDebugEnabled()) {
@@ -196,13 +196,13 @@ public class NativeMessageDispatchingHandler implements MessageDispatchingHandle
 	 * @param index
 	 * @return
 	 */
-	protected AppQueueHandler getQueueToProcess(int index, Queueable msg){
+	protected AppQueueHandler getQueueToProcess(long index, Queueable msg){
 		index = index % s_dispatchers;
 		if (c_logger.isTraceDebugEnabled()) {
 			c_logger.traceDebug(this, "getQueueToProcess", "sending msg to queue no:"+index + " msg="+msg +
-					" handler Q:"+_dispatchersArray[index].getClass().getName());
+					" handler Q:"+_dispatchersArray[(int) index].getClass().getName());
 		}
-		return _dispatchersArray[index];
+		return _dispatchersArray[(int) index];
 	}
 
 	/**
