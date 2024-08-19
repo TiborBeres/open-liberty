@@ -33,7 +33,8 @@ import com.ibm.ws.sip.container.servlets.SipSessionImplementation;
 import com.ibm.ws.sip.container.servlets.WASXHttpSessionListener;
 import com.ibm.ws.sip.container.tu.TransactionUserWrapper;
 import com.ibm.ws.sip.container.was.WASHttpSessionListener;
-import com.ibm.ws.sip.container.was.WASXTasksInvoker;
+import com.ibm.ws.sip.container.events.BasicTasksInvoker;
+//import com.ibm.ws.sip.container.was.WASXTasksInvoker;
 import com.ibm.ws.sip.container.was.WebsphereInvoker;
 import com.ibm.ws.sip.properties.CoreProperties;
 import com.ibm.ws.sip.security.auth.SipSecurityManager;
@@ -106,7 +107,7 @@ public class SipContainer
 	/**
 	 * Invoker for SIP tasks
 	 */
-	private static TasksInvoker s_tasksInvoker = new WASXTasksInvoker();
+	private static TasksInvoker s_tasksInvoker = new BasicTasksInvoker();
 	
 	/**
 	 * The listener for http sessions
