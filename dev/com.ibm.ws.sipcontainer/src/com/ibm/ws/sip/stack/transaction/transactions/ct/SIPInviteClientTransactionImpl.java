@@ -53,6 +53,10 @@ public class SIPInviteClientTransactionImpl
 	private TimerB m_timerB;
 	
 	/**
+	 * Timer C for all transport types, controls client INVITE transaction timeouts
+	 */
+	private TimerC m_timerC;
+	/**
 	 * Timer D reflects the amount of time that the server transaction can remain in the "Completed" 
 	 * state when unreliable transports are used
 	 */
@@ -63,6 +67,9 @@ public class SIPInviteClientTransactionImpl
 	
 	/** value of timer B for this transaction, in milliseconds */
 	private final int m_timerBvalue;
+	
+	/** value of timer C for this transaction, in milliseconds */
+	private final int m_timerCvalue;
 	
 	/**
 	 * the last response that was receives ( could be provisionning like RINGING )
@@ -103,6 +110,7 @@ public class SIPInviteClientTransactionImpl
 		super(transactionStack, provider, req, key, transactionId);
 		m_timerAvalue = getTimerA(req);
 		m_timerBvalue = getTimerB(req);
+		m_timerCvalue = getTimerC(req);
 		SIPNonInviteClientTransactionImpl.getTimerT2(req); // just remove this header if it exists
 
 		try {
@@ -147,6 +155,9 @@ public class SIPInviteClientTransactionImpl
 							
 							m_timerB = new TimerB(this, getCallId());
 							addTimerTask(m_timerB, m_timerBvalue);
+							
+							m_timerC = new TimerC(this, getCallId());
+							addTimerTask(m_timerC, m_timerCvalue);
 							break;
 		
 					case STATE_CALLING:					
@@ -210,6 +221,7 @@ public class SIPInviteClientTransactionImpl
 							setFinalResponse(sipResponse);
 							sendAutomaticAckRequest();
 							notCalling();
+							cancelTimerC();
 							setCompletedState();
 							sendResponseToUA( sipResponse );				
 						}												
@@ -346,6 +358,38 @@ public class SIPInviteClientTransactionImpl
 	}
 
 	/**
+	 * gets the value of timer C for the given message:
+	 * If the IBM-TransactionTimeout header is present, this value is used. otherwise..
+	 * If a timer value is specified in configuration, its value is used, otherwise..
+	 * The default timer value is used.
+	 *
+	 * @param request the request to send
+	 * @return the value of timer C to use in this transaction
+	 */
+	private static int getTimerC(Request request) {
+		// 1. get from message
+		int timerValue = -1;
+		try {
+			IbmTransactionTimeoutHeader header = (IbmTransactionTimeoutHeader)
+				request.getHeader(IbmTransactionTimeoutHeader.name, true);
+			if (header != null && header.applicationCreated()) {
+				timerValue = header.getTimeValue();
+				request.removeHeader(IbmTransactionTimeoutHeader.name, true);
+			}
+		}
+		catch (HeaderParseException e) {
+			if (c_logger.isTraceDebugEnabled()) {
+				c_logger.traceDebug(SIPNonInviteClientTransactionImpl.class, "getTimerC",
+					"error getting header [" + IbmTransactionTimeoutHeader.name
+					+ "] in message\r\n" + request,
+					e);
+			}
+		}
+		// get from configuration
+		SIPStackConfiguration config = SIPTransactionStack.instance().getConfiguration();
+		return config.getTimerC();
+	}
+	/**
 	 * timer A fired , try to send again
 	 */
 	synchronized void timerAfired()
@@ -402,6 +446,20 @@ public class SIPInviteClientTransactionImpl
 	}
 
 	/**
+	 * called when TimerC fires
+	 */
+	void timerCfired() {
+		if (c_logger.isTraceDebugEnabled()) {
+			c_logger.traceDebug(this, "timerCfired",
+				"Timer C fired on transaction " + toString());
+		}
+		updateSipTimersInvocationsPMICounter();
+		if (getState() == STATE_PROCEEDING) {
+			notifyTransactionTimeoutToUA();
+			destroyTransaction();
+		}
+	}
+	/**
 	 * called when TimerD fires
 	 */
 	void timerDfired() {
@@ -417,7 +475,7 @@ public class SIPInviteClientTransactionImpl
 	}
 
 	/**
-	 *  prosses transport error
+	 *  process transport error
 	 */	
 	public synchronized void prossesTransportError()
 	{
@@ -473,6 +531,32 @@ public class SIPInviteClientTransactionImpl
 				}
 			}	
 			
+			/**
+			 *  timer C for this transaction
+			 */
+			static class TimerC extends TimerEvent
+			{
+				SIPInviteClientTransactionImpl m_ct;
+				
+				TimerC(SIPInviteClientTransactionImpl ct, String callId)
+				{
+					super(callId);
+					m_ct = ct;
+				}
+				
+				public void onExecute()
+				{
+					//timer C
+					if (m_ct != null) {
+						m_ct.timerCfired();
+					}
+				}
+				
+				public boolean cancel()
+				{
+					return super.cancel();
+				}
+			}
 			/**
 			 *  timer D for this transaction
 			 */
@@ -624,6 +708,10 @@ public class SIPInviteClientTransactionImpl
 		{
 			m_timerB.cancel();
 		}
+		if( m_timerC!=null)
+		{
+			m_timerC.cancel();
+		}
 		if( m_timerD!=null)
 		{
 			m_timerD.cancel();
@@ -644,6 +732,14 @@ public class SIPInviteClientTransactionImpl
 			m_timerB.cancel();
 		}
 	}
+	
+	private void cancelTimerC() {
+    	if (m_timerC != null) {
+			m_timerC.cancel();
+		}
+
+	}
+
 
 	/** return the most recent response */
 	public Response getMostRecentResponse()

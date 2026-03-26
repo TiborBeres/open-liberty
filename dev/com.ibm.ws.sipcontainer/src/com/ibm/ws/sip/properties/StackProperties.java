@@ -194,6 +194,8 @@ public class StackProperties {
 	public static final String TIMER_B_DEPRECATED = "javax.sip.transaction.timerb";
 	public static final int TIMER_B_DEFAULT = 64*TIMER_T1_DEFAULT;
 	
+	public static final String TIMER_C = "javax.sip.transaction.timer.c";
+	public static final int TIMER_C_DEFAULT = 180000;
 	/** Timer D - Wait time for INVITE response retransmits */
 	public static final String TIMER_D = "timerD";
 	public static final int TIMER_D_DEFAULT = 32000;
@@ -691,6 +693,7 @@ public class StackProperties {
     	
     	properties.setInt(TIMER_A, TIMER_A_DEFAULT, CustPropSource.DEFAULT);
     	properties.setInt(TIMER_B, TIMER_B_DEFAULT, CustPropSource.DEFAULT);
+		properties.setInt(TIMER_C, TIMER_C_DEFAULT, CustPropSource.DEFAULT);
     	properties.setInt(TIMER_B_DEPRECATED, TIMER_B_DEFAULT, CustPropSource.DEFAULT);
     	properties.setInt(TIMER_D, TIMER_D_DEFAULT, CustPropSource.DEFAULT);
     	properties.setInt(TIMER_E, TIMER_E_DEFAULT, CustPropSource.DEFAULT);
